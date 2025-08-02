@@ -1,0 +1,52 @@
+# ────────── GLOBAL ──────────
+.DS_Store
+*.log
+*.tmp
+
+# ────────── JAVA: java-service ──────────
+java-service/target/
+java-service/.idea/
+java-service/.classpath
+java-service/.project
+java-service/.settings/
+java-service/.mvn/
+java-service/mvnw
+java-service/mvnw.cmd
+java-service/HELP.md
+
+# IntelliJ
+java-service/.idea/
+*.iml
+
+# Logs y dumps
+java-service/spring.log
+java-service/hs_err_pid*.log
+
+# ────────── PYTHON: python-service ──────────
+python-service/__pycache__/
+python-service/**/*.pyc
+python-service/.venv/
+python-service/venv/
+python-service/env/
+python-service/.env
+python-service/*.egg-info/
+python-service/build/
+python-service/dist/
+
+# Jupyter / VSCode / IPython
+*.ipynb_checkpoints
+.vscode/
+.ipynb_checkpoints/
+.python-version
+
+# ────────── DOCKER & SISTEMA ──────────
+*.tar
+*.bak
+*.swp
+*.swo
+*.~*
+*.orig
+
+# ────────── ENV FILES ──────────
+.env
+*.env
