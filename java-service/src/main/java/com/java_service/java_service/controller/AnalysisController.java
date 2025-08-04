@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
     origins = {
         "http://localhost:5173", 
         "http://localhost:3000",
-        "https://frontend-latest-9780.onrender.com"
+        "https://react-frontend-latest-70au.onrender.com"
     },
     allowCredentials = "true",
     maxAge = 86400,
