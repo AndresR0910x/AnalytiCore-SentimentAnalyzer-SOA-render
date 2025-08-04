@@ -14,18 +14,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Configurar Node.js para el frontend
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # Compilar el proyecto frontend
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
       # Configurar JDK 21 para compilar Java
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'  # Especificar Java 21 explícitamente
-          distribution: 'adopt'  # Usar AdoptOpenJDK (o 'temurin' para Eclipse Temurin)
+          java-version: '21'
+          distribution: 'temurin'  # Cambiar a temurin para mayor compatibilidad
 
       # Compilar el proyecto Java con Maven
       - name: Build Java project
         run: |
           cd java-service
-          mvn clean package -DskipTests  # Omite tests por ahora
+          mvn clean package -DskipTests
         env:
           MAVEN_OPTS: "-Xmx1024m"
 
@@ -42,6 +55,15 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Construir y empujar la imagen del frontend
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/react-frontend:latest
 
       # Construir y empujar la imagen del Servicio de Submisión
       - name: Build and push submission-service
@@ -61,7 +83,16 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/analysis-service:latest
 
-      # Desplegar en Render (Servicio de Submisión) usando API manual
+      # Desplegar en Render (Frontend)
+      - name: Deploy to Render - Frontend
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"service_id": "${{ secrets.RENDER_FRONTEND_SERVICE_ID }}", "clear_cache": true}' \
+            https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_SERVICE_ID }}/deploys
+
+      # Desplegar en Render (Servicio de Submisión)
       - name: Deploy to Render - Submission Service
         run: |
           curl -X POST \
@@ -70,7 +101,7 @@ jobs:
             -d '{"service_id": "${{ secrets.RENDER_SUBMISSION_SERVICE_ID }}", "clear_cache": true}' \
             https://api.render.com/v1/services/${{ secrets.RENDER_SUBMISSION_SERVICE_ID }}/deploys
 
-      # Desplegar en Render (Servicio de Análisis) usando API manual
+      # Desplegar en Render (Servicio de Análisis)
       - name: Deploy to Render - Analysis Service
         run: |
           curl -X POST \

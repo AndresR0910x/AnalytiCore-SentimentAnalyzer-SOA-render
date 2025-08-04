@@ -12,30 +12,14 @@ load_dotenv()
 
 app = FastAPI()
 
-# Define allowed origins
-allowed_origins = [
-    "http://localhost:5173",
-    "https://frontend-latest-9780.onrender.com"
-]
-
-# Enable CORS
+# Enable CORS with wildcard for debugging
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
 )
-
-# Custom middleware to ensure CORS headers in all responses
-@app.middleware("http")
-async def add_cors_headers(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["Access-Control-Allow-Origin"] = "https://frontend-latest-9780.onrender.com"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    return response
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
