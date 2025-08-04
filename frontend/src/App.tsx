@@ -5,8 +5,6 @@ import ResultsCard from './components/ResultsCard';
 import { enviarTexto, consultarAnalisis, iniciarAnalisis } from './api';
 import { AnalysisResult } from './types';
 
-
-//Fixed
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
@@ -39,14 +37,20 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string>('');
-  const [currentJobId, setCurrentJobId] = useState<string>(''); // Descomentar esta línea
+  const [currentJobId, setCurrentJobId] = useState<string>('');
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   const handleSubmit = async (text: string) => {
     setIsLoading(true);
     setError('');
     setResult(null);
-    setCurrentJobId(''); // Limpiar el jobId anterior
+    setCurrentJobId('');
+
+    // Limpiar cualquier intervalo de polling existente
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
 
     try {
       // Enviar texto para obtener jobId
@@ -66,27 +70,25 @@ function App() {
   };
 
   const startPolling = (jobId: string) => {
+    // Limpiar cualquier intervalo previo (por seguridad)
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+
     const pollJob = async () => {
       try {
         const jobResult = await consultarAnalisis(jobId);
         console.log('Resultado del polling:', jobResult);
 
-        if (jobResult.status === 'COMPLETED') {
+        if (jobResult.status === 'COMPLETADO' || jobResult.status === 'FAILED') {
           setResult(jobResult);
           setIsLoading(false);
           if (pollingInterval) {
             clearInterval(pollingInterval);
             setPollingInterval(null);
           }
-        } else if (jobResult.status === 'FAILED') {
-          setError('El análisis ha fallado. Por favor, intenta de nuevo.');
-          setIsLoading(false);
-          if (pollingInterval) {
-            clearInterval(pollingInterval);
-            setPollingInterval(null);
-          }
         }
-        // Si está PENDIENTE, continúa el polling
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al consultar el análisis');
         setIsLoading(false);
@@ -128,10 +130,7 @@ function App() {
               </h1>
             </div>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              He sido desplegado correctamente !
-              Por favor funcionaaaa
-              SEGUIMOSSSS
-              Analiza el sentimiento de cualquier texto y descubre palabras clave con inteligencia artificial
+              He sido desplegado correctamente! Analiza el sentimiento de cualquier texto y descubre palabras clave con inteligencia artificial
             </p>
           </div>
 
