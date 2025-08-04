@@ -37,17 +37,19 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string>('');
-  //const [currentJobId, setCurrentJobId] = useState<string>('');
+  const [currentJobId, setCurrentJobId] = useState<string>(''); // Descomentar esta línea
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   const handleSubmit = async (text: string) => {
     setIsLoading(true);
     setError('');
     setResult(null);
+    setCurrentJobId(''); // Limpiar el jobId anterior
 
     try {
       // Enviar texto para obtener jobId
       const jobId = await enviarTexto(text);
+      console.log('JobId recibido:', jobId);
       setCurrentJobId(jobId);
 
       // Iniciar el análisis en el servicio Java
@@ -65,6 +67,7 @@ function App() {
     const pollJob = async () => {
       try {
         const jobResult = await consultarAnalisis(jobId);
+        console.log('Resultado del polling:', jobResult);
 
         if (jobResult.status === 'COMPLETED') {
           setResult(jobResult);
@@ -81,7 +84,7 @@ function App() {
             setPollingInterval(null);
           }
         }
-        // Si está PENDING, continúa el polling
+        // Si está PENDIENTE, continúa el polling
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al consultar el análisis');
         setIsLoading(false);
