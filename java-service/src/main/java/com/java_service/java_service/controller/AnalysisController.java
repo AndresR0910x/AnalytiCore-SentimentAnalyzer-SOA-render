@@ -3,11 +3,13 @@ package com.java_service.java_service.controller;
 import com.java_service.java_service.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@CrossOrigin(origins = {"http://localhost:5173", "https://tu-frontend.onrender.com"})
 public class AnalysisController {
 
     @Autowired

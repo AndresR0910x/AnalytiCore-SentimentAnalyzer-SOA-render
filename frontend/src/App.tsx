@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Brain, AlertTriangle } from 'lucide-react';
 import TextForm from './components/TextForm';
 import ResultsCard from './components/ResultsCard';
-import { enviarTexto, consultarAnalisis } from './api';
+import { enviarTexto, consultarAnalisis, iniciarAnalisis } from './api';
 import { AnalysisResult } from './types';
 
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean }
-> {
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
@@ -32,7 +29,6 @@ class ErrorBoundary extends React.Component<
         </div>
       );
     }
-
     return this.props.children;
   }
 }
@@ -41,19 +37,22 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string>('');
-  const [currentJobId, setCurrentJobId] = useState<string>('');
+  //const [currentJobId, setCurrentJobId] = useState<string>('');
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   const handleSubmit = async (text: string) => {
     setIsLoading(true);
     setError('');
     setResult(null);
-    
+
     try {
-      // Enviar texto para análisis
+      // Enviar texto para obtener jobId
       const jobId = await enviarTexto(text);
       setCurrentJobId(jobId);
-      
+
+      // Iniciar el análisis en el servicio Java
+      await iniciarAnalisis(jobId);
+
       // Iniciar polling para obtener resultados
       startPolling(jobId);
     } catch (err) {
@@ -66,7 +65,7 @@ function App() {
     const pollJob = async () => {
       try {
         const jobResult = await consultarAnalisis(jobId);
-        
+
         if (jobResult.status === 'COMPLETED') {
           setResult(jobResult);
           setIsLoading(false);
@@ -95,14 +94,13 @@ function App() {
 
     // Ejecutar inmediatamente
     pollJob();
-    
+
     // Configurar polling cada 3 segundos
     const interval = setInterval(pollJob, 3000);
     setPollingInterval(interval);
   };
 
   useEffect(() => {
-    // Limpiar interval al desmontar el componente
     return () => {
       if (pollingInterval) {
         clearInterval(pollingInterval);
