@@ -1,10 +1,6 @@
-const API_SUBMISSION_URL = 'https://api-submission-service.onrender.com';
-
-const API_ANALYSIS_URL = 'https://api-analysis-service-v1.onrender.com'; // Ajusta el puerto local si el análisis corre en otro servicio
-
 export const enviarTexto = async (text: string): Promise<string> => {
   try {
-    const response = await fetch(`${API_SUBMISSION_URL}/submit`, {
+    const response = await fetch(`/submit`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -31,7 +27,7 @@ export const enviarTexto = async (text: string): Promise<string> => {
 };
 
 export const consultarAnalisis = async (jobId: string) => {
-  const response = await fetch(`${API_SUBMISSION_URL}/job/${jobId}`);
+  const response = await fetch(`/job/${jobId}`);
 
   if (!response.ok) {
     throw new Error(`Error al consultar análisis: ${response.status}`);
@@ -45,7 +41,7 @@ export const consultarAnalisis = async (jobId: string) => {
 // Nueva función para iniciar el análisis en el servicio Java
 export const iniciarAnalisis = async (jobId: string): Promise<void> => {
   try {
-    const response = await fetch(`${API_ANALYSIS_URL}/analyze`, {
+    const response = await fetch(`/analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
