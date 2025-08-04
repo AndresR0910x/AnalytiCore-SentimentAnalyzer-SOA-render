@@ -17,7 +17,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                     "http://localhost:5173",
                     "http://localhost:3000", 
-                    "https://frontend-latest-9780.onrender.com"
+                    "https://react-frontend-latest-70au.onrender.com"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
