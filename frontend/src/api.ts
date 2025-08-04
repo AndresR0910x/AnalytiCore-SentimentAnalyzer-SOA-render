@@ -1,6 +1,7 @@
+// api.ts
 export const enviarTexto = async (text: string): Promise<string> => {
   try {
-    const response = await fetch(`/submit`, {
+    const response = await fetch('https://api-submission-service.onrender.com/submit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -27,7 +28,7 @@ export const enviarTexto = async (text: string): Promise<string> => {
 };
 
 export const consultarAnalisis = async (jobId: string) => {
-  const response = await fetch(`/job/${jobId}`);
+  const response = await fetch(`https://api-submission-service.onrender.com/job/${jobId}`);
 
   if (!response.ok) {
     throw new Error(`Error al consultar análisis: ${response.status}`);
@@ -38,10 +39,9 @@ export const consultarAnalisis = async (jobId: string) => {
   return data;
 };
 
-// Nueva función para iniciar el análisis en el servicio Java
 export const iniciarAnalisis = async (jobId: string): Promise<void> => {
   try {
-    const response = await fetch(`/analyze`, {
+    const response = await fetch('https://api-analysis-service-v1.onrender.com/analyze', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

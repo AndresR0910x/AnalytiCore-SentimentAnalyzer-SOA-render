@@ -8,19 +8,22 @@ import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
-#Clase main puerta de entrada para la app
-
 load_dotenv()
 
 app = FastAPI()
 
-# Habilitar CORS
+# Define allowed origins
+allowed_origins = [
+    "https://frontend-latest-9780.onrender.com",  # Development
+]
+
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Añadir el origen del frontend (local y producción)
+    allow_origins=allowed_origins,  # List of allowed origins
     allow_credentials=True,
-    allow_methods=["*"],  # Permitir todos los métodos (GET, POST, etc.)
-    allow_headers=["*"],  # Permitir todos los encabezados
+    allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],  # Allow all headers
 )
 
 # Database configuration
