@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
 from pydantic import BaseModel
 from app.services import SubmissionService
 from app.models import Job, JobStatus
@@ -14,17 +14,28 @@ app = FastAPI()
 
 # Define allowed origins
 allowed_origins = [
-    "https://frontend-latest-9780.onrender.com",  # Development
+    "http://localhost:5173",
+    "https://frontend-latest-9780.onrender.com"
 ]
 
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,  # List of allowed origins
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
+
+# Custom middleware to ensure CORS headers in all responses
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "https://frontend-latest-9780.onrender.com"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -44,10 +55,6 @@ class JobResponse(BaseModel):
 
 # Initialize service
 submission_service = SubmissionService()
-
-@app.options("/submit")
-async def options_submit():
-    return {"message": "CORS preflight handled"}
 
 @app.post("/submit", response_model=JobResponse)
 def submit_text(submission: TextSubmission):
