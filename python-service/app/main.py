@@ -7,6 +7,8 @@ from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
 
+#Clase main puerta de entrada para la app
+
 load_dotenv()
 
 app = FastAPI()

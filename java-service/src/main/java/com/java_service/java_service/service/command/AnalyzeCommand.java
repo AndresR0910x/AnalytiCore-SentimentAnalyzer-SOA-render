@@ -34,7 +34,7 @@ public class AnalyzeCommand {
 
     private String analyzeSentiment(String text) {
         String lowerText = text.toLowerCase();
-        int positive = countOccurrences(lowerText, new String[]{"good", "great", "happy", "gran", "excelente"});
+        int positive = countOccurrences(lowerText, new String[]{"good", "great", "", "gran", "excelentehappy"});
         int negative = countOccurrences(lowerText, new String[]{"bad", "sad", "terrible", "malo", "triste"});
         if (positive > negative) return "POSITIVE";
         if (negative > positive) return "NEGATIVE";
