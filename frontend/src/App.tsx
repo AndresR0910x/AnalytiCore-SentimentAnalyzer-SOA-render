@@ -128,6 +128,7 @@ function App() {
               </h1>
             </div>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              He sido desplegado correctamente !
               Analiza el sentimiento de cualquier texto y descubre palabras clave con inteligencia artificial
             </p>
           </div>
