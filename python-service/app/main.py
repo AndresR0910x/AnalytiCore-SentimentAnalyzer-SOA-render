@@ -42,6 +42,10 @@ class JobResponse(BaseModel):
 # Initialize service
 submission_service = SubmissionService()
 
+@app.options("/submit")
+async def options_submit():
+    return {"message": "CORS preflight handled"}
+
 @app.post("/submit", response_model=JobResponse)
 def submit_text(submission: TextSubmission):
     if not submission.text.strip():
