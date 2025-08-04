@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import Response
 from pydantic import BaseModel
 from app.services import SubmissionService
 from app.models import Job, JobStatus
@@ -6,59 +7,42 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
-from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
 app = FastAPI()
 
-# Configuración CORS más específica y segura
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Desarrollo local
-        "http://localhost:3000",  # Por si usas otro puerto en desarrollo
-        "https://frontend-latest-9780.onrender.com",  # Tu frontend en producción
-        # Agrega aquí otros dominios si es necesario
-    ],
-    allow_credentials=True,  # Cambiar a True para permitir cookies/auth headers
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Métodos permitidos
-    allow_headers=[
-        "Content-Type",
-        "Authorization",
-        "Accept",
-        "Origin",
-        "X-Requested-With",
-        "Access-Control-Request-Method",
-        "Access-Control-Request-Headers",
-    ],
-    expose_headers=["*"],  # Headers que el cliente puede acceder
-    max_age=86400,  # Cache preflight por 24 horas
-)
+# Orígenes permitidos
+ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000", 
+    "https://frontend-latest-9780.onrender.com"
+]
 
-# Middleware adicional para manejar OPTIONS explícitamente
+# Middleware manual para CORS
 @app.middleware("http")
-async def cors_handler(request: Request, call_next):
+async def cors_middleware(request: Request, call_next):
+    origin = request.headers.get("origin")
+    
+    # Manejar peticiones OPTIONS (preflight)
     if request.method == "OPTIONS":
         response = Response()
-        response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "*")
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin, X-Requested-With"
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Max-Age"] = "86400"
+        if origin in ALLOWED_ORIGINS:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin, X-Requested-With"
+            response.headers["Access-Control-Max-Age"] = "86400"
         return response
     
+    # Procesar petición normal
     response = await call_next(request)
     
-    # Asegurar headers CORS en todas las respuestas
-    origin = request.headers.get("origin")
-    if origin in [
-        "http://localhost:5173",
-        "http://localhost:3000", 
-        "https://frontend-latest-9780.onrender.com"
-    ]:
+    # Agregar headers CORS a la respuesta
+    if origin in ALLOWED_ORIGINS:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Expose-Headers"] = "*"
     
     return response
 
