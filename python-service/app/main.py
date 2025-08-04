@@ -12,18 +12,21 @@ load_dotenv()
 
 app = FastAPI()
 
-# Enable CORS with wildcard for debugging
+# Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://react-frontend-latest-70au.onrender.com"],
-    allow_credentials=False,  # Desactiva credenciales para wildcard
+    allow_origins=[
+        "https://react-frontend-latest-70au.onrender.com",
+        "http://localhost:5173"  # Para pruebas locales
+    ],
+    allow_credentials=True,  # Habilitar credenciales
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
 )
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
-print(DATABASE_URL)
+print(f"DATABASE_URL: {DATABASE_URL}")
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -67,3 +70,7 @@ def get_job_status(job_id: str):
         )
     finally:
         db.close()
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "service": "submission-service", "cors": "enabled"}
