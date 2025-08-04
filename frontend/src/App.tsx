@@ -5,6 +5,8 @@ import ResultsCard from './components/ResultsCard';
 import { enviarTexto, consultarAnalisis, iniciarAnalisis } from './api';
 import { AnalysisResult } from './types';
 
+
+//Fixed
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
