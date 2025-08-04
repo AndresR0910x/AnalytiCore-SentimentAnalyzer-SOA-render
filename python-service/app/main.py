@@ -12,14 +12,55 @@ load_dotenv()
 
 app = FastAPI()
 
-# Enable CORS with wildcard for debugging
+# Configuración CORS más específica y segura
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_origins=[
+        "http://localhost:5173",  # Desarrollo local
+        "http://localhost:3000",  # Por si usas otro puerto en desarrollo
+        "https://frontend-latest-9780.onrender.com",  # Tu frontend en producción
+        # Agrega aquí otros dominios si es necesario
+    ],
+    allow_credentials=True,  # Cambiar a True para permitir cookies/auth headers
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Métodos permitidos
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers",
+    ],
+    expose_headers=["*"],  # Headers que el cliente puede acceder
+    max_age=86400,  # Cache preflight por 24 horas
 )
+
+# Middleware adicional para manejar OPTIONS explícitamente
+@app.middleware("http")
+async def cors_handler(request: Request, call_next):
+    if request.method == "OPTIONS":
+        response = Response()
+        response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "*")
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin, X-Requested-With"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Max-Age"] = "86400"
+        return response
+    
+    response = await call_next(request)
+    
+    # Asegurar headers CORS en todas las respuestas
+    origin = request.headers.get("origin")
+    if origin in [
+        "http://localhost:5173",
+        "http://localhost:3000", 
+        "https://frontend-latest-9780.onrender.com"
+    ]:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    
+    return response
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -67,3 +108,8 @@ def get_job_status(job_id: str):
         )
     finally:
         db.close()
+
+# Endpoint de health check
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "service": "submission-service"}
