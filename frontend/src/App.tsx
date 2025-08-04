@@ -70,7 +70,7 @@ function App() {
   };
 
   const startPolling = (jobId: string) => {
-    // Limpiar cualquier intervalo previo (por seguridad)
+    // Limpiar cualquier intervalo previo (para evitar duplicados)
     if (pollingInterval) {
       clearInterval(pollingInterval);
       setPollingInterval(null);
@@ -81,7 +81,7 @@ function App() {
         const jobResult = await consultarAnalisis(jobId);
         console.log('Resultado del polling:', jobResult);
 
-        if (jobResult.status === 'COMPLETADO' || jobResult.status === 'FAILED') {
+        if (jobResult.status === 'COMPLETADO' || jobResult.status === 'FALLIDO') {
           setResult(jobResult);
           setIsLoading(false);
           if (pollingInterval) {
