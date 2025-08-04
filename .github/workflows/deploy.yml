@@ -46,16 +46,20 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/analysis-service:latest
 
-      # Desplegar en Render (Servicio de Submisión)
+      # Desplegar en Render (Servicio de Submisión) usando API manual
       - name: Deploy to Render - Submission Service
-        uses: rendercom/render-action@v1
-        with:
-          service-id: ${{ secrets.RENDER_SUBMISSION_SERVICE_ID }}
-          api-token: ${{ secrets.RENDER_API_TOKEN }}
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"service_id": "${{ secrets.RENDER_SUBMISSION_SERVICE_ID }}", "clear_cache": true}' \
+            https://api.render.com/v1/services/${{ secrets.RENDER_SUBMISSION_SERVICE_ID }}/deploys
 
-      # Desplegar en Render (Servicio de Análisis)
+      # Desplegar en Render (Servicio de Análisis) usando API manual
       - name: Deploy to Render - Analysis Service
-        uses: rendercom/render-action@v1
-        with:
-          service-id: ${{ secrets.RENDER_ANALYSIS_SERVICE_ID }}
-          api-token: ${{ secrets.RENDER_API_TOKEN }}
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"service_id": "${{ secrets.RENDER_ANALYSIS_SERVICE_ID }}", "clear_cache": true}' \
+            https://api.render.com/v1/services/${{ secrets.RENDER_ANALYSIS_SERVICE_ID }}/deploys
