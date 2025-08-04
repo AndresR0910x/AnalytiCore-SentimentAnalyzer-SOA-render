@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@CrossOrigin(origins = {"http://localhost:5173", "https://frontend-latest-9780.onrender.com"}, methods = {"GET", "POST", "OPTIONS"}, allowedHeaders = {"Content-Type", "Authorization"})
+@CrossOrigin(origins = {"http://localhost:5173", "https://frontend-latest-9780.onrender.com"} )
 public class AnalysisController {
 
     @Autowired
