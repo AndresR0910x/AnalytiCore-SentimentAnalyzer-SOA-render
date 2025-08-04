@@ -1,6 +1,5 @@
 name: CI/CD Pipeline for AnalytiCore
 
-# Ejecutar el workflow en cada push a la rama main
 on:
   push:
     branches:
@@ -49,18 +48,14 @@ jobs:
 
       # Desplegar en Render (Servicio de Submisión)
       - name: Deploy to Render - Submission Service
-        uses: render-examples/render-action@v1
+        uses: rendercom/render-action@v1
         with:
-          service-id: ${{ secrets.RENDER_SUBMISSION_SERVICE_ID }}  # ID del servicio en Render
+          service-id: ${{ secrets.RENDER_SUBMISSION_SERVICE_ID }}
           api-token: ${{ secrets.RENDER_API_TOKEN }}
-        env:
-          RENDER_SERVICE_NAME: api-submission-service
 
       # Desplegar en Render (Servicio de Análisis)
       - name: Deploy to Render - Analysis Service
-        uses: render-examples/render-action@v1
+        uses: rendercom/render-action@v1
         with:
-          service-id: ${{ secrets.RENDER_ANALYSIS_SERVICE_ID }}  # ID del servicio en Render
+          service-id: ${{ secrets.RENDER_ANALYSIS_SERVICE_ID }}
           api-token: ${{ secrets.RENDER_API_TOKEN }}
-        env:
-          RENDER_SERVICE_NAME: api-analysis-service
