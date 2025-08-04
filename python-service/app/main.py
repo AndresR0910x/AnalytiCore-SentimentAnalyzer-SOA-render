@@ -15,7 +15,7 @@ app = FastAPI()
 # Enable CORS with wildcard for debugging
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://react-frontend-latest-70au.onrender.com/"],
+    allow_origins=["https://react-frontend-latest-70au.onrender.com"],
     allow_credentials=False,  # Desactiva credenciales para wildcard
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
