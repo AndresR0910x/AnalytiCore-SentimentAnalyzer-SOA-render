@@ -42,13 +42,12 @@ public class AnalyzeCommand {
         "odio", "desprecio", "asco", "repulsión", "aversión", "rechazo",
         "negativo", "pesimista", "desesperanzado", "desconfiado", "inseguro",
         // Inglés
-        "bad", "terrible", "horrible", "awful", "dreadful", "atrocious",
-        "disgusting", "appalling", "deplorable", "abysmal", "pathetic",
-        "sad", "depressed", "miserable", "dejected", "downhearted", "gloomy",
-        "angry", "furious", "mad", "irritated", "annoyed", "outraged",
-        "failure", "disaster", "catastrophe", "defeat", "loss", "ruin",
-        "hate", "despise", "loathe", "detest", "abhor", "disgust",
-        "negative", "pessimistic", "hopeless", "doubtful", "uncertain"
+        "bad", "awful", "dreadful", "atrocious", "disgusting", "appalling", 
+        "abysmal", "pathetic", "sad", "depressed", "miserable", "dejected", 
+        "downhearted", "gloomy", "angry", "furious", "mad", "irritated", 
+        "annoyed", "outraged", "failure", "disaster", "catastrophe", "defeat", 
+        "loss", "ruin", "hate", "despise", "loathe", "detest", "abhor", 
+        "disgust", "negative", "pessimistic", "hopeless", "doubtful", "uncertain"
     );
     
     // Palabras vacías (stop words) en español e inglés
@@ -270,8 +269,8 @@ public class AnalyzeCommand {
         }
 
         public String getSentiment() { return sentiment; }
-        //public double getScore() { return score; }
-        //public int getPositiveCount() { return positiveCount; }
-        //public int getNegativeCount() { return negativeCount; }
+        public double getScore() { return score; }
+        public int getPositiveCount() { return positiveCount; }
+        public int getNegativeCount() { return negativeCount; }
     }
 }
