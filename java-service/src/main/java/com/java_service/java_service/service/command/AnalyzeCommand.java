@@ -15,12 +15,12 @@ public class AnalyzeCommand {
     // Diccionarios de sentimientos mejorados (español e inglés)
     private static final Set<String> POSITIVE_WORDS = Set.of(
         // Español
-        "bueno", "excelente", "genial", "fantástico", "increíble", "maravilloso", 
-        "perfecto", "estupendo", "magnífico", "extraordinario", "brillante", 
+        "bueno", "excelente", "genial", "fantastico", "increible", "maravilloso", 
+        "perfecto", "estupendo", "magnifico", "extraordinario", "brillante", 
         "fabuloso", "espectacular", "fenomenal", "grandioso", "hermoso",
         "alegre", "feliz", "contento", "satisfecho", "emocionado", "radiante",
-        "exitoso", "triunfante", "victorioso", "ganador", "próspero",
-        "amor", "cariño", "afecto", "pasión", "admiración", "respeto",
+        "exitoso", "triunfante", "victorioso", "ganador", "prospero",
+        "amor", "carino", "afecto", "pasion", "admiracion", "respeto",
         "positivo", "optimista", "esperanzado", "confiado", "seguro",
         // Inglés
         "good", "great", "excellent", "amazing", "wonderful", "fantastic", 
@@ -34,12 +34,12 @@ public class AnalyzeCommand {
     
     private static final Set<String> NEGATIVE_WORDS = Set.of(
         // Español
-        "malo", "terrible", "horrible", "pésimo", "deplorable", "desastroso",
-        "espantoso", "nefasto", "lamentable", "patético", "repugnante",
-        "triste", "deprimido", "melancólico", "abatido", "desanimado",
+        "malo", "terrible", "horrible", "pesimo", "deplorable", "desastroso",
+        "espantoso", "nefasto", "lamentable", "patetico", "repugnante",
+        "triste", "deprimido", "melancolico", "abatido", "desanimado",
         "furioso", "enojado", "molesto", "irritado", "indignado", "airado",
-        "fracaso", "derrota", "pérdida", "ruina", "catástrofe", "desgracia",
-        "odio", "desprecio", "asco", "repulsión", "aversión", "rechazo",
+        "fracaso", "derrota", "perdida", "ruina", "catastrofe", "desgracia",
+        "odio", "desprecio", "asco", "repulsion", "aversion", "rechazo",
         "negativo", "pesimista", "desesperanzado", "desconfiado", "inseguro",
         // Inglés
         "bad", "awful", "dreadful", "atrocious", "disgusting", "appalling", 
@@ -50,13 +50,14 @@ public class AnalyzeCommand {
         "disgust", "negative", "pessimistic", "hopeless", "doubtful", "uncertain"
     );
     
-    // Palabras vacías (stop words) en español e inglés
+    // Palabras vacías (stop words) en español e inglés - SIN DUPLICADOS
     private static final Set<String> STOP_WORDS = Set.of(
         // Español
         "el", "la", "de", "que", "y", "a", "en", "un", "es", "se", "no", "te", "lo", "le", 
-        "da", "su", "por", "son", "con", "para", "al", "una", "ser", "son", "como", "más",
+        "da", "su", "por", "son", "con", "para", "al", "una", "ser", "como", "mas",
         "este", "esta", "del", "han", "ha", "las", "los", "pero", "sus", "me", "hasta",
         "donde", "quien", "desde", "todos", "durante", "todo", "ella", "muy", "sin", "sobre",
+        "fue", "sido", "estar", "tener", "hacer", "ir", "ver", "dar", "saber", "querer",
         // Inglés
         "the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by", "from",
         "up", "about", "into", "through", "during", "before", "after", "above", "below", "between",
@@ -73,14 +74,30 @@ public class AnalyzeCommand {
     }
 
     public void execute() {
+        Job job = null;
         try {
-            Job job = jobRepository.findById(jobId)
+            // Validar jobId
+            if (jobId == null || jobId.trim().isEmpty()) {
+                throw new IllegalArgumentException("JobId no puede ser nulo o vacío");
+            }
+
+            job = jobRepository.findById(jobId)
                     .orElseThrow(() -> new RuntimeException("Trabajo no encontrado: " + jobId));
+            
+            // Verificar que el job no esté ya procesado
+            if (Job.JobStatus.COMPLETADO.equals(job.getStatus())) {
+                throw new RuntimeException("El trabajo ya está completado: " + jobId);
+            }
             
             job.setStatus(Job.JobStatus.PROCESANDO);
             jobRepository.save(job);
 
             String text = job.getText();
+            
+            // Validar que hay texto para procesar
+            if (text == null || text.trim().isEmpty()) {
+                throw new RuntimeException("No hay texto para procesar en el trabajo: " + jobId);
+            }
             
             // Análisis mejorado de sentimientos
             SentimentResult sentimentResult = analyzeSentimentAdvanced(text);
@@ -92,13 +109,18 @@ public class AnalyzeCommand {
             jobRepository.save(job);
             
         } catch (Exception e) {
-            // Manejar errores y actualizar el estado del trabajo
-            Job job = jobRepository.findById(jobId).orElse(null);
-            if (job != null) {
-                job.setStatus(Job.JobStatus.PENDIENTE);
-                jobRepository.save(job);
+            // Manejar errores y actualizar el estado del trabajo a PENDIENTE
+            try {
+                if (job != null) {
+                    job.setStatus(Job.JobStatus.PENDIENTE); // Volver a PENDIENTE para reintento
+                    jobRepository.save(job);
+                }
+            } catch (Exception saveException) {
+                // Log el error de guardado pero no lanzar otra excepción
+                System.err.println("Error al guardar estado después del fallo: " + saveException.getMessage());
             }
-            throw new RuntimeException("Error en el análisis de texto: " + e.getMessage(), e);
+            
+            throw new RuntimeException("Error en el análisis de texto para job " + jobId + ": " + e.getMessage(), e);
         }
     }
 
@@ -113,6 +135,10 @@ public class AnalyzeCommand {
         String normalizedText = normalizeText(text);
         String[] words = tokenizeText(normalizedText);
         
+        if (words.length == 0) {
+            return new SentimentResult("NEUTRAL", 0.0, 0, 0);
+        }
+        
         int positiveCount = 0;
         int negativeCount = 0;
         double sentimentScore = 0.0;
@@ -120,21 +146,23 @@ public class AnalyzeCommand {
         // Análisis por palabras con contexto
         for (int i = 0; i < words.length; i++) {
             String word = words[i];
+            if (word == null || word.trim().isEmpty()) continue;
+            
             double wordWeight = 1.0;
             
             // Detectar intensificadores (muy, extremely, etc.)
             if (i > 0) {
                 String previousWord = words[i - 1];
-                if (isIntensifier(previousWord)) {
+                if (previousWord != null && isIntensifier(previousWord)) {
                     wordWeight = 1.5; // Aumentar peso si hay intensificador
                 }
             }
             
             // Detectar negaciones (no, not, nunca, etc.)
             boolean isNegated = false;
-            if (i > 0 && i < words.length - 1) {
+            if (i > 0) {
                 String previousWord = words[i - 1];
-                if (isNegation(previousWord)) {
+                if (previousWord != null && isNegation(previousWord)) {
                     isNegated = true;
                 }
             }
@@ -159,14 +187,13 @@ public class AnalyzeCommand {
         }
         
         // Normalizar el puntaje
-        int totalWords = words.length;
-        double normalizedScore = totalWords > 0 ? sentimentScore / totalWords : 0.0;
+        double normalizedScore = sentimentScore / words.length;
         
         // Determinar el sentimiento final
         String sentiment;
-        if (normalizedScore > 0.1) {
+        if (normalizedScore > 0.05) {
             sentiment = "POSITIVE";
-        } else if (normalizedScore < -0.1) {
+        } else if (normalizedScore < -0.05) {
             sentiment = "NEGATIVE";
         } else {
             sentiment = "NEUTRAL";
@@ -184,17 +211,24 @@ public class AnalyzeCommand {
         }
 
         String normalizedText = normalizeText(text);
+        String[] words = tokenizeText(normalizedText);
         
-        return Arrays.stream(tokenizeText(normalizedText))
+        if (words.length == 0) {
+            return "";
+        }
+        
+        return Arrays.stream(words)
+                .filter(Objects::nonNull) // Filtrar nulls
+                .filter(word -> !word.trim().isEmpty()) // Filtrar vacíos
                 .filter(word -> word.length() > 2) // Palabras de al menos 3 caracteres
                 .filter(word -> !STOP_WORDS.contains(word)) // Filtrar palabras vacías
                 .filter(word -> !word.matches("\\d+")) // Excluir números puros
                 .filter(this::isRelevantWord) // Filtro adicional de relevancia
                 .collect(Collectors.groupingBy(word -> word, Collectors.counting()))
                 .entrySet().stream()
-                .filter(entry -> entry.getValue() > 1) // Solo palabras que aparecen más de una vez
+                .filter(entry -> entry.getValue() >= 1) // Cambié de >1 a >=1 para incluir palabras únicas
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-                .limit(10) // Aumentar a 10 palabras clave
+                .limit(8) // Reducido a 8 palabras clave
                 .map(entry -> entry.getKey() + "(" + entry.getValue() + ")") // Incluir frecuencia
                 .collect(Collectors.joining(", "));
     }
@@ -205,21 +239,32 @@ public class AnalyzeCommand {
     private String normalizeText(String text) {
         if (text == null) return "";
         
-        // Eliminar acentos
-        String normalized = Normalizer.normalize(text, Normalizer.Form.NFD);
-        normalized = Pattern.compile("\\p{InCombiningDiacriticalMarks}+").matcher(normalized).replaceAll("");
-        
-        // Convertir a minúsculas y limpiar caracteres especiales
-        return normalized.toLowerCase()
-                .replaceAll("[^a-zA-Z0-9\\s]", " ")
-                .replaceAll("\\s+", " ")
-                .trim();
+        try {
+            // Eliminar acentos
+            String normalized = Normalizer.normalize(text, Normalizer.Form.NFD);
+            normalized = Pattern.compile("\\p{InCombiningDiacriticalMarks}+").matcher(normalized).replaceAll("");
+            
+            // Convertir a minúsculas y limpiar caracteres especiales
+            return normalized.toLowerCase()
+                    .replaceAll("[^a-zA-Z0-9\\s]", " ")
+                    .replaceAll("\\s+", " ")
+                    .trim();
+        } catch (Exception e) {
+            // Si falla la normalización, al menos limpiar básicamente
+            return text.toLowerCase()
+                    .replaceAll("[^a-zA-Z0-9\\s]", " ")
+                    .replaceAll("\\s+", " ")
+                    .trim();
+        }
     }
 
     /**
      * Tokeniza el texto en palabras individuales
      */
     private String[] tokenizeText(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return new String[0];
+        }
         return text.split("\\s+");
     }
 
@@ -227,6 +272,7 @@ public class AnalyzeCommand {
      * Detecta si una palabra es un intensificador
      */
     private boolean isIntensifier(String word) {
+        if (word == null) return false;
         Set<String> intensifiers = Set.of("muy", "extremely", "really", "quite", "totally", 
                                          "absolutely", "completely", "entirely", "utterly", 
                                          "bastante", "sumamente", "tremendamente");
@@ -237,6 +283,7 @@ public class AnalyzeCommand {
      * Detecta si una palabra es una negación
      */
     private boolean isNegation(String word) {
+        if (word == null) return false;
         Set<String> negations = Set.of("no", "not", "never", "nothing", "nobody", "nowhere",
                                       "nunca", "nada", "nadie", "ninguno", "ninguna", "jamas");
         return negations.contains(word);
@@ -246,10 +293,12 @@ public class AnalyzeCommand {
      * Determina si una palabra es relevante para ser palabra clave
      */
     private boolean isRelevantWord(String word) {
+        if (word == null || word.length() < 3) return false;
+        
         // Filtrar palabras muy comunes o poco significativas
         Set<String> irrelevantWords = Set.of("cosa", "cosas", "algo", "alguien", "someone", 
                                             "something", "anything", "everything", "nothing");
-        return !irrelevantWords.contains(word) && word.length() >= 3;
+        return !irrelevantWords.contains(word);
     }
 
     /**
